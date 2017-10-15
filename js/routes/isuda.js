@@ -102,7 +102,7 @@ router.get('', async (ctx, next) => {
   const page = parseInt(ctx.query.page) || 1;
 
   const db = await dbh(ctx);
-  const entries = await db.query('SELECT * FROM entry ORDER BY updated_at DESC LIMIT ? OFFSET ?', [perPage, perPage * (page - 1)])
+  const entries = await db.query('SELECT description, keyword FROM entry ORDER BY updated_at DESC LIMIT ? OFFSET ?', [perPage, perPage * (page - 1)])
   for (let entry of entries) {
     entry.html = await htmlify(ctx, entry.description);
     entry.stars = await loadStars(ctx, entry.keyword);
@@ -277,7 +277,7 @@ router.post('keyword/:keyword', async (ctx, next) => {
   }
 
   const db = await dbh(ctx);
-  const entries = await db.query('SELECT * FROM entry WHERE keyword = ?', [keyword]);
+  const entries = await db.query('SELECT id FROM entry WHERE keyword = ?', [keyword]);
   if (entries.length == 0) {
     ctx.status = 404;
     return;
@@ -294,7 +294,7 @@ const htmlify = async (ctx, content) => {
   }
 
   const db = await dbh(ctx);
-  const keywords = await db.query('SELECT * FROM entry ORDER BY CHARACTER_LENGTH(keyword) DESC');
+  const keywords = await db.query('SELECT keyword FROM entry ORDER BY CHARACTER_LENGTH(keyword) DESC');
   const key2sha = new Map();
   const re = new RegExp(keywords.map((keyword) => escapeRegExp(keyword.keyword)).join('|'), 'g');
   let result = content.replace(re, (keyword) => {
